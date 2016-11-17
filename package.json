@@ -1,0 +1,11 @@
+{
+  "name": "md-ticket-front-end",
+  "version": "0.0.0",
+  "dependencies": {
+    "express": ">0.1.1",
+    "body-parser": ">0.1.1",
+    "cors": ">0.1.1",
+    "fs": ">0.0.0",
+    "mongoose": ">0.1.1"
+  }
+}

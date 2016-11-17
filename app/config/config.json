@@ -1,0 +1,13 @@
+{
+	"port": 2000,
+	"mongoose": {
+		"uri" : "mongodb://localhost/communication",
+		"options": {
+			"server": {
+				"socketOptions": {
+					"keepAlive": 1
+				}
+			}
+		}
+	}
+}
