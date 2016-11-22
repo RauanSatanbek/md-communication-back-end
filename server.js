@@ -253,3 +253,60 @@ app.listen(1000, function() {
 	console.log("Backend Started");
 });
 
+// async.waterfall([
+//     function (done) {
+//         KeyWord.findById(req.params.id, function(err, key) {
+//             if (err) return next(err);
+//             done(null, key);
+//         });
+//     },
+//     function(key, done) {
+//         key.user = req.body.user;
+//         key.word = req.body.word;
+//         key.save(function(err) {
+//             if (err) return next(err);
+//             done(err, key);
+//         });
+//     }
+// ], function(err, key){
+//     if(err) return next(err);
+//     res.status(200).send({ keyword: key, message: 'Success'});
+// });
+
+// if(err) {
+//         res.statusCode = 500;
+//         res.send("Error");
+//       } else {
+//         getPosts(res, filter, userId);
+//         Posts.find({}, function(err, result) {
+//           if(err){
+//             res.statusCode = 500;
+//             res.send(err);
+//           } else {
+//             var postId = result[result.length - 1]._id;
+//             for(var i = 0; i < userIds.length; i++) {
+//               var userId = userIds[i];
+//               Users.findOne({_id: userId}, function(err, result2) {
+//                 if(err){
+//                   res.statusCode = 500;
+//                   res.send(err);
+//                 } else {
+//                   var postsId = result2.posts;
+//                   console.log(result2);
+//                   if(postsId == undefined) {
+//                     console.log("empty", postsId);
+//                     Users.update({_id: userId}, {$set: {posts: postId}}, function(err, affected) {
+//                       if(err) console.log(err);
+//                     });
+//                   } else {
+//                     console.log("not empty", postId);
+//                     Users.update({_id: userId}, {$set: {posts: postsId + ":" + postId}}, function(err, affected) {
+//                       if(err) console.log(err);
+//                     });
+//                   }
+//                 }
+//               });
+//             }
+//           }
+//         });
+//       }
