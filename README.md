@@ -2,5 +2,5 @@
 
 npm install
 
-node addUser.js - to add some user
+node addUser.js - to add some users
 node server.js - to run server
