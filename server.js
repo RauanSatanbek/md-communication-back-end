@@ -6,7 +6,7 @@ var app = express();
 app.use(cors());
 app.use(bodyParser());
 /* ------------------------------------------------------------------------------------------
-* Подключаем все коллекций test
+* Подключаем все коллекций test test
 */
 	var Comments = require("./app/models/comments.js").Comments;
 	var Posts = require("./app/models/posts.js").Posts;
