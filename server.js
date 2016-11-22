@@ -26,10 +26,12 @@ app.use(bodyParser());
 * гетим инфомацию о нашем юзере  
 */
 	app.get("/api/user/:id", function(req, res) {
-		Users.findOne({_id: req.params.id}, function(err, result) {
+
+		// Users.findOne({_id: req.params.id}, function(err, result) {
+		Users.findOne(function(err, result) {
 			if(err) {
 				res.statusCode = 500;
-				res.send("error");
+				res.send(err);
 			} else {
 				res.send(result);
 			}
@@ -249,7 +251,7 @@ app.use(bodyParser());
 			}
 		});
 	});
-app.listen(1000, function() {
+app.listen(8082, function() {
 	console.log("Backend Started");
 });
 

@@ -9,6 +9,9 @@ for(var i = 0; i < 3; i++) {
 		avatar: users[i].avatar,
 		posts: users[i].posts
 	});
-
 	user.save();
 }
+
+// Users.findOne(function(err, res) {
+// 	console.log(res);
+// });
