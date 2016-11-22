@@ -12,6 +12,3 @@ for(var i = 0; i < 3; i++) {
 	user.save();
 }
 
-// Users.findOne(function(err, res) {
-// 	console.log(res);
-// });
