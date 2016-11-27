@@ -5,6 +5,7 @@ var fs = require("fs");
 var app = express();
 app.use(cors());
 app.use(bodyParser());
+
 /* ------------------------------------------------------------------------------------------
 * Подключаем все коллекций
 */
@@ -15,10 +16,14 @@ app.use(bodyParser());
 * get all users
 * гетим всех юзеров для - Получатели  
 */
-	app.get("/api/user", function(req, res, next) {
-		Users.find(function(err, result) {
+	app.get("/api/user/select:id", function(req, res, next) {
+		var query = Users.find({});
+			query.$where('this._id != "'+req.params.id+'"').exec(function(err, result) {
 			if(err) console.log(err);
-			else res.send(result);
+			else {
+				console.log(result);
+				res.send(result);
+			}
 		});
 	});
 /* ------------------------------------------------------------------------------------------
@@ -26,13 +31,12 @@ app.use(bodyParser());
 * гетим инфомацию о нашем юзере  
 */
 	app.get("/api/user/:id", function(req, res) {
-
-		// Users.findOne({_id: req.params.id}, function(err, result) {
-		Users.findOne(function(err, result) {
+		Users.findOne({_id: req.params.id}, function(err, result) {
 			if(err) {
 				res.statusCode = 500;
 				res.send(err);
 			} else {
+	            console.log(result);
 				res.send(result);
 			}
 		});
@@ -46,14 +50,12 @@ app.use(bodyParser());
 		var text = req.body.text;
 		var postId = req.body.postId;
 		var userId = req.body.userId;
-		var userName = req.body.userName;
 		var date = Date.now();
 		Posts.update({_id: postId}, {$set: {answer: date}}, function(err, affected) {
 			if(err) console.log("error");
 		});
 		var comment = new Comments({
-			userName: userName,
-			userId: userId,
+			creator: userId,
 			postId: postId,
 			text: text,
 			date: Date.now()
@@ -63,7 +65,9 @@ app.use(bodyParser());
 				res.statusCode = 500;
 				res.send(err);
 			} else {
-				Comments.find({postId: postId}, function(err, result) {
+				Comments.find({postId: postId})
+				.populate([{path: 'creator', select: 'name avatar'}])
+				.exec(function(err, result) {
 					if (err) return "error";
 					else res.send(result);
 				});
@@ -76,7 +80,9 @@ app.use(bodyParser());
 */
 	app.post("/api/comment/:postId", function(req, res) {
 		var postId = req.params.postId;
-		Comments.find({postId: postId}, function(err, result) {
+		Comments.find({postId: postId})
+		.populate([{path: 'creator', select: 'name avatar'}])
+		.exec(function(err, result) {
 			if (err) return "error";
 			else res.send(result);
 		});
@@ -116,7 +122,9 @@ app.use(bodyParser());
 */ 
 // Мои
 	function filterMy(res, userId) {
-		Posts.find({creator: userId}, function(err, result) {
+		Posts.find({creator: userId})
+		.populate([{path: 'creator', select: 'name'}])
+		.exec(function(err, result) {
 			if(err) {
 				res.statusCode = 500;
 				res.send(err);
@@ -126,44 +134,26 @@ app.use(bodyParser());
 	}
 // Общие
 	function filterCommon(res, userId) {
-		Users.findOne({_id: userId}, function(err, result) {
-			var postIds = result.posts.split(":");
-			var str = "";
-			var c = " || ";
-			for(var i = 0; i < postIds.length; i++) {
-				if(i + 1 == postIds.length) c = "";
-				var str = str + "this._id == " + "'" + postIds[i] + "'" + c;
+		Posts.find({users: userId})
+		.populate([{path: 'creator', select: 'name'}])
+		.exec(function(err, result) {
+			if(err) {
+				res.statusCode = 500;
+				res.send(err);
 			}
-			var query = Posts.find({});
-				query.$where(str).exec(function(err, result) {
-				if(err) {
-					res.statusCode = 500;
-					res.send(err);
-				}
-				else res.send(result);
-			});
+			else res.send(result);
 		});
 	}
 // Все
 	function filterAll(res, userId) {
-		Users.findOne({_id: userId}, function(err, result) {
-			var postIds = result.posts.split(":");
-			var str = "this.creator == '"+userId+"' || ";
-			var c = " || ";
-			for(var i = 0; i < postIds.length; i++) {
-				if(i + 1 == postIds.length) c = "";
-				var str = str + "this._id == " + "'" + postIds[i] + "'" + c;
+		Posts.find({$or: [{creator: userId}, {users: userId}]})
+		.populate([{path: 'creator', select: 'name'}])
+		.exec(function(err, result) {
+			if(err) {
+				res.statusCode = 500;
+				res.send(err);
 			}
-			var query = Posts.find({});
-			query.$where(str).exec(function(err, result) {
-				if(err) {
-					res.statusCode = 500;
-					res.send(err);
-				}
-				else {
-					res.send(result);
-				}
-			});
+			else res.send(result);
 		});
 	}
 /* ------------------------------------------------------------------------------------------
@@ -202,13 +192,15 @@ app.use(bodyParser());
 		var filter = req.body.filter;
 
 		var userIds = req.body.userIds;
+
 		var post = new Posts({
 			tema: tema,
 			text: text,
 			date: Date.now(),
 			answer: "",
 			creator: userId,
-			creatorName: userName
+			users: userIds,
+			favorite: []
 		});
 		post.save(function(err, affected) {
 			if(err) {
@@ -216,99 +208,33 @@ app.use(bodyParser());
 				res.send("Error");
 			} else {
 				getPosts(res, filter, userId);
-				Posts.find({}, function(err, result) {
-					if(err){
-						res.statusCode = 500;
-						res.send(err);
-					} else {
-						var postId = result[result.length - 1]._id;
-						for(var i = 0; i < userIds.length; i++) {
-							var userId = userIds[i];
-							Users.findOne({_id: userId}, function(err, result2) {
-								if(err){
-									res.statusCode = 500;
-									res.send(err);
-								} else {
-									var postsId = result2.posts;
-									console.log(result2);
-									if(postsId == undefined) {
-										console.log("empty", postsId);
-										Users.update({_id: userId}, {$set: {posts: postId}}, function(err, affected) {
-											if(err) console.log(err);
-											
-										});
-									} else {
-										console.log("not empty", postId);
-										Users.update({_id: userId}, {$set: {posts: postsId + ":" + postId}}, function(err, affected) {
-											if(err) console.log(err);
-										});
-									}
-								}
-							});
-						}
-					}
-				});
 			}
 		});
 	});
+
+/* ------------------------------------------------------------------------------------------
+* adToFavorite
+* Добавить посты в избранное
+*/
+	app.post("/api/posts/addToFavourites", function(req, res) {
+		var userId = req.body.userId;
+		var postId = req.body.postId;
+		Posts.findOne({_id: postId}, function(err, result) {
+			var bool = result.favorite.indexOf(userId) == -1;
+			if(bool) {
+				Posts.update({_id: postId}, {$push: {favorite: userId}}, function(err, affected) {
+					if (err) res.send(err);
+					else res.send("1 -------------");
+				});
+			} else {
+				Posts.update({_id: postId}, {$pull: {favorite: userId}}, function(err, affected) {
+					if (err) res.send(err);
+					else res.send("0 -------------");
+				});
+			}
+		})
+		
+	})
 app.listen(8082, function() {
 	console.log("Backend Started");
 });
-
-// async.waterfall([
-//     function (done) {
-//         KeyWord.findById(req.params.id, function(err, key) {
-//             if (err) return next(err);
-//             done(null, key);
-//         });
-//     },
-//     function(key, done) {
-//         key.user = req.body.user;
-//         key.word = req.body.word;
-//         key.save(function(err) {
-//             if (err) return next(err);
-//             done(err, key);
-//         });
-//     }
-// ], function(err, key){
-//     if(err) return next(err);
-//     res.status(200).send({ keyword: key, message: 'Success'});
-// });
-
-// if(err) {
-//         res.statusCode = 500;
-//         res.send("Error");
-//       } else {
-//         getPosts(res, filter, userId);
-//         Posts.find({}, function(err, result) {
-//           if(err){
-//             res.statusCode = 500;
-//             res.send(err);
-//           } else {
-//             var postId = result[result.length - 1]._id;
-//             for(var i = 0; i < userIds.length; i++) {
-//               var userId = userIds[i];
-//               Users.findOne({_id: userId}, function(err, result2) {
-//                 if(err){
-//                   res.statusCode = 500;
-//                   res.send(err);
-//                 } else {
-//                   var postsId = result2.posts;
-//                   console.log(result2);
-//                   if(postsId == undefined) {
-//                     console.log("empty", postsId);
-//                     Users.update({_id: userId}, {$set: {posts: postId}}, function(err, affected) {
-//                       if(err) console.log(err);
-//                     });
-//                   } else {
-//                     console.log("not empty", postId);
-//                     Users.update({_id: userId}, {$set: {posts: postsId + ":" + postId}}, function(err, affected) {
-//                       if(err) console.log(err);
-//                     });
-//                   }
-//                 }
-//               });
-//             }
-//           }
-//         });
-//       }

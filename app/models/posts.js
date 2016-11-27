@@ -5,7 +5,8 @@ var schema = new Schema({
 	text: String,
 	date: Number,
 	answer: Number,
-	creator: String,
-	creatorName: String
+	creator : [{ type: Schema.Types.ObjectId, ref: 'Users' }],
+	users: [{ type: Schema.Types.ObjectId, ref: 'Users' }],
+	favorite: [String]
 });
 exports.Posts = mongoose.model("Posts", schema);
