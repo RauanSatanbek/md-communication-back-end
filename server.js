@@ -123,45 +123,59 @@ app.use(bodyParser());
 // Мои
 	function filterMy(res, userId) {
 		Posts.find({creator: userId})
-		.populate([{path: 'creator', select: 'name'}])
-		.exec(function(err, result) {
-			if(err) {
-				res.statusCode = 500;
-				res.send(err);
-			}
-			else res.send(result);
-		});
+			.populate([{path: 'creator', select: 'name'}])
+			.exec(function(err, result) {
+				if(err) {
+					res.statusCode = 500;
+					res.send(err);
+				}
+				else res.send(result);
+			});
 	}
 // Общие
 	function filterCommon(res, userId) {
 		Posts.find({users: userId})
-		.populate([{path: 'creator', select: 'name'}])
-		.exec(function(err, result) {
-			if(err) {
-				res.statusCode = 500;
-				res.send(err);
-			}
-			else res.send(result);
-		});
+			.populate([{path: 'creator', select: 'name'}])
+			.exec(function(err, result) {
+				if(err) {
+					res.statusCode = 500;
+					res.send(err);
+				}
+				else res.send(result);
+			});
 	}
 // Все
 	function filterAll(res, userId) {
 		Posts.find({$or: [{creator: userId}, {users: userId}]})
-		.populate([{path: 'creator', select: 'name'}])
-		.exec(function(err, result) {
-			if(err) {
-				res.statusCode = 500;
-				res.send(err);
-			}
-			else res.send(result);
-		});
+			.populate([{path: 'creator', select: 'name'}])
+			.exec(function(err, result) {
+				if(err) {
+					res.statusCode = 500;
+					res.send(err);
+				}
+				else res.send(result);
+			});
+		}
+// Избранные
+	function filterFavorite(res, userId) {
+		Posts.find({favorite: userId})
+			.populate({path: "creator", select: "name"})
+			.exec(function(err, result) {
+				if(err) {
+					res.statusCode = 500;
+					res.send(err);
+				}
+				else res.send(result);
+			});
+
 	}
 /* ------------------------------------------------------------------------------------------
-* getPosts - Возвращает все посты для выбранный - Мои = 1 || Общие = 2 || Все = 3 - 
+* getPosts - Возвращает все посты для выбранный - Мои = 1 || Общие = 2 || Все = 3 || Избранные = 4
 * вызывает одну из трех функций 
 * 1) Мои = filterMy 
 * 2) Общие = filterCommon
 * 3) Все = filterAll
+* 3) Все = filterFavorite
 */ 
 	function getPosts(res, filter, userId) {
 		var results = [];
@@ -174,6 +188,9 @@ app.use(bodyParser());
 				break;
 			case 3:
 				filterAll(res, userId);
+				break;
+			case 4:
+				filterFavorite(res, userId);
 				break;
 		}
 	}
@@ -222,15 +239,17 @@ app.use(bodyParser());
 		Posts.findOne({_id: postId}, function(err, result) {
 			var bool = result.favorite.indexOf(userId) == -1;
 			if(bool) {
-				Posts.update({_id: postId}, {$push: {favorite: userId}}, function(err, affected) {
-					if (err) res.send(err);
-					else res.send("1 -------------");
-				});
+				Posts.update({_id: postId}, {$push: {favorite: userId}})
+					.exec(function(err, affected) {
+						if (err) res.send(err);
+						else res.send("1 -------------");
+					});
 			} else {
-				Posts.update({_id: postId}, {$pull: {favorite: userId}}, function(err, affected) {
-					if (err) res.send(err);
-					else res.send("0 -------------");
-				});
+				Posts.update({_id: postId}, {$pull: {favorite: userId}})
+					.exec(function(err, affected) {
+						if (err) res.send(err);
+						else res.send("0 -------------");
+					});
 			}
 		})
 		
