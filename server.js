@@ -9,15 +9,16 @@ app.use(bodyParser());
 /* ------------------------------------------------------------------------------------------
 * Подключаем все коллекций
 */
-	var Comments = require("./app/models/comments.js").Comments;
-	var Posts = require("./app/models/posts.js").Posts;
-	var Users = require("./app/models/user.js").Users;
+	var Comment = require("./app/models/comment.js");
+	var Post = require("./app/models/post.js");
+	var User = require("./app/models/user.js").Users;
 /* ------------------------------------------------------------------------------------------
 * get all users
 * гетим всех юзеров для - Получатели  
 */
 	app.get("/api/user/select:id", function(req, res, next) {
-		var query = Users.find({});
+		var userId = req.params.id;
+		var query = User.find({});
 		query.$where('this._id != "'+req.params.id+'"')
 			.exec(function(err, result) {
 				if(err) console.log(err);
@@ -32,7 +33,7 @@ app.use(bodyParser());
 * гетим инфомацию о нашем юзере  
 */
 	app.get("/api/user/:id", function(req, res) {
-		Users.findOne({_id: req.params.id})
+		User.findOne({_id: req.params.id})
 			.exec(function(err, result) {
 				if(err) {
 					res.statusCode = 500;
@@ -53,11 +54,11 @@ app.use(bodyParser());
 		var postId = req.body.postId;
 		var userId = req.body.userId;
 		var date = Date.now();
-		Posts.update({_id: postId}, {$set: {answer: date}})
+		Post.update({_id: postId}, {$set: {answer: date}})
 			.exec(function(err, affected) {
 				if(err) console.log("error");
 			});
-		var comment = new Comments({
+		var comment = new Comment({
 			creator: userId,
 			postId: postId,
 			text: text,
@@ -68,7 +69,7 @@ app.use(bodyParser());
 				res.statusCode = 500;
 				res.send(err);
 			} else {
-				Comments.find({postId: postId})
+				Comment.find({postId: postId})
 					.populate([{path: 'creator', select: 'name avatar'}])
 					.exec(function(err, result) {
 						if (err) return "error";
@@ -83,7 +84,7 @@ app.use(bodyParser());
 */
 	app.post("/api/comment/:postId", function(req, res) {
 		var postId = req.params.postId;
-		Comments.find({postId: postId})
+		Comment.find({postId: postId})
 			.populate([{path: 'creator', select: 'name avatar'}])
 			.exec(function(err, result) {
 				if (err) return "error";
@@ -95,7 +96,7 @@ app.use(bodyParser());
 * Возвращаем выбранный пост
 */
 	app.post("/api/post/:id", function(req, res) {
-		Posts.findOne({_id: req.params.id}, function(err, result) {
+		Post.findOne({_id: req.params.id}, function(err, result) {
 			if(err) {
 				res.statusCode = 500;
 				res.send("Error");
@@ -105,7 +106,7 @@ app.use(bodyParser());
 		});
 	});
 /* ------------------------------------------------------------------------------------------
-* get Posts - Фильтрация
+* get Post - Фильтрация
 * вызываем фунцию getPosts
 * getPosts - Возвращает все посты для выбранный - Мои = 1 || Общие = 2 || Все = 3- 
 */
@@ -123,7 +124,7 @@ app.use(bodyParser());
 */ 
 // Мои
 	function filterMy(res, userId) {
-		Posts.find({creator: userId})
+		Post.find({creator: userId})
 			.populate([{path: 'creator', select: 'name'}])
 			.exec(function(err, result) {
 				if(err) {
@@ -135,7 +136,7 @@ app.use(bodyParser());
 	}
 // Общие
 	function filterCommon(res, userId) {
-		Posts.find({users: userId})
+		Post.find({users: userId})
 			.populate([{path: 'creator', select: 'name'}])
 			.exec(function(err, result) {
 				if(err) {
@@ -147,7 +148,7 @@ app.use(bodyParser());
 	}
 // Все
 	function filterAll(res, userId) {
-		Posts.find({$or: [{creator: userId}, {users: userId}]})
+		Post.find({$or: [{creator: userId}, {users: userId}]})
 			.populate([{path: 'creator', select: 'name'}])
 			.exec(function(err, result) {
 				if(err) {
@@ -159,7 +160,7 @@ app.use(bodyParser());
 		}
 // Избранные
 	function filterFavorite(res, userId) {
-		Posts.find({favorite: userId})
+		Post.find({favorite: userId})
 			.populate({path: "creator", select: "name"})
 			.exec(function(err, result) {
 				if(err) {
@@ -210,7 +211,7 @@ app.use(bodyParser());
 		var filter = req.body.filter;
 		var userIds = req.body.userIds;
 
-		var post = new Posts({
+		var post = new Post({
 			theme: theme,
 			text: text,
 			date: Date.now(),
@@ -237,16 +238,16 @@ app.use(bodyParser());
 	app.post("/api/posts/addToFavourites", function(req, res) {
 		var userId = req.body.userId;
 		var postId = req.body.postId;
-		Posts.findOne({_id: postId}, function(err, result) {
+		Post.findOne({_id: postId}, function(err, result) {
 			var bool = result.favorite.indexOf(userId) == -1;
 			if(bool) {
-				Posts.update({_id: postId}, {$push: {favorite: userId}})
+				Post.update({_id: postId}, {$push: {favorite: userId}})
 					.exec(function(err, affected) {
 						if (err) res.send(err);
 						else res.send("1");
 					});
 			} else {
-				Posts.update({_id: postId}, {$pull: {favorite: userId}})
+				Post.update({_id: postId}, {$pull: {favorite: userId}})
 					.exec(function(err, affected) {
 						if (err) res.send(err);
 						else res.send("0");
@@ -254,26 +255,28 @@ app.use(bodyParser());
 			}
 		})
 		
-	})
+	});
 /* ------------------------------------------------------------------------------------------
 * deletePosts
 * Удаляем чеканные посты
 */
 	app.post("/api/posts/delete", function(req, res) {
 		var listDelete = req.body.listDelete;
+		var userId = req.body.userId; 
 		for(var i = 0; i < listDelete.length; i++) {
 			var postId = listDelete[i];
-			Posts.remove({_id: postId})
+			Post.remove({_id: postId, creator: userId})
 				.exec(function(err, affected) {
 					if(err) res.send(err);
 				});
-			Comments.remove({postId: postId})
+			Comment.remove({postId: postId})
 				.exec(function(err, affected) {
 					if(err) res.send(err);
 				});
 		}
 		res.send("Ok");
 	});
+
 app.listen(8082, function() {
 	console.log("Backend Started");
 });

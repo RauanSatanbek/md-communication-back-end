@@ -1,6 +1,6 @@
 var mongoose = require("../libs/mongoose.js");
 var Schema = mongoose.Schema;
-var schema = new Schema({
+var postSchema = new Schema({
 	theme: String,
 	text: String,
 	date: {type: Date, default: Date.now},
@@ -9,4 +9,4 @@ var schema = new Schema({
 	users: [{type: Schema.Types.ObjectId, ref: 'Users'}],
 	favorite: [String]
 });
-exports.Posts = mongoose.model("Posts", schema);
+module.exports = mongoose.model("Post", postSchema);
