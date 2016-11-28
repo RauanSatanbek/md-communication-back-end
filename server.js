@@ -18,28 +18,30 @@ app.use(bodyParser());
 */
 	app.get("/api/user/select:id", function(req, res, next) {
 		var query = Users.find({});
-			query.$where('this._id != "'+req.params.id+'"').exec(function(err, result) {
-			if(err) console.log(err);
-			else {
-				console.log(result);
-				res.send(result);
-			}
-		});
+		query.$where('this._id != "'+req.params.id+'"')
+			.exec(function(err, result) {
+				if(err) console.log(err);
+				else {
+					console.log(result);
+					res.send(result);
+				}
+			});
 	});
 /* ------------------------------------------------------------------------------------------
 * get user
 * гетим инфомацию о нашем юзере  
 */
 	app.get("/api/user/:id", function(req, res) {
-		Users.findOne({_id: req.params.id}, function(err, result) {
-			if(err) {
-				res.statusCode = 500;
-				res.send(err);
-			} else {
-	            console.log(result);
-				res.send(result);
-			}
-		});
+		Users.findOne({_id: req.params.id})
+			.exec(function(err, result) {
+				if(err) {
+					res.statusCode = 500;
+					res.send(err);
+				} else {
+		            console.log(result);
+					res.send(result);
+				}
+			});
 	});
 /* ------------------------------------------------------------------------------------------
 * addComment
@@ -51,9 +53,10 @@ app.use(bodyParser());
 		var postId = req.body.postId;
 		var userId = req.body.userId;
 		var date = Date.now();
-		Posts.update({_id: postId}, {$set: {answer: date}}, function(err, affected) {
-			if(err) console.log("error");
-		});
+		Posts.update({_id: postId}, {$set: {answer: date}})
+			.exec(function(err, affected) {
+				if(err) console.log("error");
+			});
 		var comment = new Comments({
 			creator: userId,
 			postId: postId,
@@ -66,11 +69,11 @@ app.use(bodyParser());
 				res.send(err);
 			} else {
 				Comments.find({postId: postId})
-				.populate([{path: 'creator', select: 'name avatar'}])
-				.exec(function(err, result) {
-					if (err) return "error";
-					else res.send(result);
-				});
+					.populate([{path: 'creator', select: 'name avatar'}])
+					.exec(function(err, result) {
+						if (err) return "error";
+						else res.send(result);
+					});
 			}
 		});
 	});
@@ -81,12 +84,11 @@ app.use(bodyParser());
 	app.post("/api/comment/:postId", function(req, res) {
 		var postId = req.params.postId;
 		Comments.find({postId: postId})
-		.populate([{path: 'creator', select: 'name avatar'}])
-		.exec(function(err, result) {
-			if (err) return "error";
-			else res.send(result);
-		});
-		
+			.populate([{path: 'creator', select: 'name avatar'}])
+			.exec(function(err, result) {
+				if (err) return "error";
+				else res.send(result);
+			});
 	});
 /* ------------------------------------------------------------------------------------------
 * get Post
@@ -111,7 +113,6 @@ app.use(bodyParser());
 		var m = req.params.m.split(":");
 		var userId = m[0];
 		var filter = parseInt(m[1]);
-
 		// get all post with filter 
 			getPosts(res, filter, userId);
 	});
@@ -175,7 +176,7 @@ app.use(bodyParser());
 * 1) Мои = filterMy 
 * 2) Общие = filterCommon
 * 3) Все = filterAll
-* 3) Все = filterFavorite
+* 4) Все = filterFavorite
 */ 
 	function getPosts(res, filter, userId) {
 		var results = [];
@@ -202,16 +203,15 @@ app.use(bodyParser());
 * getPosts - Возвращает все посты для выбранный - Мои = 1 || Общие = 2 || Все = 3- 
 */
 	app.post("/api/post", function(req, res) {
-		var tema = req.body.tema;
+		var theme = req.body.theme;
 		var text = req.body.text;
 		var userId = req.body.userId;
 		var userName = req.body.userName;
 		var filter = req.body.filter;
-
 		var userIds = req.body.userIds;
 
 		var post = new Posts({
-			tema: tema,
+			theme: theme,
 			text: text,
 			date: Date.now(),
 			answer: "",
@@ -224,7 +224,8 @@ app.use(bodyParser());
 				res.statusCode = 500;
 				res.send("Error");
 			} else {
-				getPosts(res, filter, userId);
+				console.log("post is successfully added");
+				res.send("Ok");
 			}
 		});
 	});
@@ -242,18 +243,37 @@ app.use(bodyParser());
 				Posts.update({_id: postId}, {$push: {favorite: userId}})
 					.exec(function(err, affected) {
 						if (err) res.send(err);
-						else res.send("1 -------------");
+						else res.send("1");
 					});
 			} else {
 				Posts.update({_id: postId}, {$pull: {favorite: userId}})
 					.exec(function(err, affected) {
 						if (err) res.send(err);
-						else res.send("0 -------------");
+						else res.send("0");
 					});
 			}
 		})
 		
 	})
+/* ------------------------------------------------------------------------------------------
+* deletePosts
+* Удаляем чеканные посты
+*/
+	app.post("/api/posts/delete", function(req, res) {
+		var listDelete = req.body.listDelete;
+		for(var i = 0; i < listDelete.length; i++) {
+			var postId = listDelete[i];
+			Posts.remove({_id: postId})
+				.exec(function(err, affected) {
+					if(err) res.send(err);
+				});
+			Comments.remove({postId: postId})
+				.exec(function(err, affected) {
+					if(err) res.send(err);
+				});
+		}
+		res.send("Ok");
+	});
 app.listen(8082, function() {
 	console.log("Backend Started");
 });
