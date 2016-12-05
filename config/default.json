@@ -1,0 +1,7 @@
+{
+  "Communication": {
+    "dbConfig": {
+      "host": "mongodb://localhost/communication"
+    }
+  }
+}

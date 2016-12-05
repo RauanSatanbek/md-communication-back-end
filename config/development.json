@@ -1,0 +1,7 @@
+{
+  "Communication": {
+    "dbConfig": {
+      "host": "mongodb://heroku_9wxw2dwv:90kq7qsvuhe37r3k9dmj6bj9vv@ds143707.mlab.com:43707/heroku_9wxw2dwv"
+    }
+  }
+}

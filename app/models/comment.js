@@ -1,4 +1,4 @@
-var mongoose = require("../libs/mongoose.js");
+var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 var commentSchema = new Schema({
