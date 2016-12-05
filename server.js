@@ -12,7 +12,7 @@ app.use(cors());
 app.use(bodyParser());
 app.use('/', routes);
 
-// Подключаемя к mongoDB
+// Подключаемя к -mongoDB
 	mongoose.connect(config.get('Communication.dbConfig.host'));
 
 app.listen(8082, function() {
