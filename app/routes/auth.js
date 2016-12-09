@@ -7,16 +7,18 @@ var app = express();
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
-
-var User = require('../models/User');
-var Client = require('../models/Client');
+var User;
+// var User = require('../models/User');
+// var Client = require('../models/Client');
 
 passport.use(new LocalStrategy({ usernameField: 'idToEnter' }, function( email, password, done) {
     email = email.split(")");
     var option = parseInt(email[1]);
     email = email[0];
     if(option == 2) {
-        User = Client;
+        User = require('../models/Client');
+    } else {
+        User = require('../models/User');
     }
     console.log(email, password, option, done);
     User.findOne({ idToEnter: email },'name password idToEnter', function(err, user) {
