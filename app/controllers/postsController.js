@@ -24,6 +24,7 @@ var Post = require("../models/post");
 		var m = req.params.m.split(":");
 		var userId = m[0];
 		var filter = parseInt(m[1]);
+		console.log(m);
 		// get all post with filter 
 			getPosts(res, filter, userId);
 	};

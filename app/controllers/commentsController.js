@@ -6,6 +6,7 @@ var Post = require("../models/post");
 * Возвращаем все комменты для выбранного поста
 */
 	module.exports.addComment = function(req, res, next){
+		console.log(req.body);
 		var text = req.body.text;
 		var postId = req.body.postId;
 		var userId = req.body.userId;

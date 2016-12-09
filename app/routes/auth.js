@@ -11,12 +11,13 @@ var LocalStrategy = require('passport-local').Strategy;
 var User = require('../models/User');
 
 passport.use(new LocalStrategy({ usernameField: 'idToEnter' }, function( email, password, done) {
+    console.log(email, password, done);
     User.findOne({ idToEnter: email },'name password idToEnter', function(err, user) {
         if (err) return done(err);
         if (!user) return done(null, false);
-        console.log(user);
+        console.log("user", user);
         user.comparePassword(password, function(err, isMatch) {
-        	console.log(isMatch);
+        	console.log("isMatch", isMatch);
             if (err) return done(err);
             if (isMatch) return done(null, user);
             return done(null, false);
@@ -67,9 +68,10 @@ app.post('/api/signup', function(req, res, next) {
 
 
 });
-
+ // passport.authenticate('local'),
 app.post('/api/login', passport.authenticate('local'), function(req, res) {
-    console.log(req.user);
+
+    console.log(req.body);
     res.cookie('user', JSON.stringify(req.user));
     res.send(req.user);
 });
