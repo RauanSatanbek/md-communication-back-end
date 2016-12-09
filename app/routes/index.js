@@ -5,9 +5,17 @@ var express = require("express"),
 	router = express.Router(),
 	postController = require("../controllers/postsController"),
 	commentController = require("../controllers/commentsController"),
+	clientController = require("../controllers/clientsController"),
 	userController = require("../controllers/usersController");
 
 
+// -----------------------------------------------------------------------
+// get all users
+	router.get("/api/user/select/:id", userController.getAllUsers);
+// get user 
+	router.get("/api/user/:id", userController.getUser);
+// get all clients 
+	router.get("/api/client", clientController.getAllClients);
 // -----------------------------------------------------------------------
 // addComment
 	router.post("/api/comment", commentController.addComment);
