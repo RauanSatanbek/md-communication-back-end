@@ -1,5 +1,5 @@
-var Comment = require("../models/comment");
-var Post = require("../models/post");
+var Comment = require("../models/CommunicationComment");
+var Post = require("../models/Post");
 /* ------------------------------------------------------------------------------------------
 * addComment
 * Добавляем новый комментарий для выбранного поста
