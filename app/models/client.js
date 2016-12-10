@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcryptjs');
-//  Hello Kasym
+
 // client schema from ticket
 var clientSchema = new mongoose.Schema({
     // regular
