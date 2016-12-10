@@ -1,7 +1,7 @@
 {
   "Communication": {
     "dbConfig": {
-      "host": "mongodb://localhost/communication2"
+      "host": "mongodb://127.0.0.1:27017/ticketPlan"
     }
   }
 }
