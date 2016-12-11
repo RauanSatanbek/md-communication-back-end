@@ -1,4 +1,4 @@
-var Comment = require("../models/CommunicationComment");
+var Comment = require("../models/PostComment");
 var Post = require("../models/Post");
 /* ------------------------------------------------------------------------------------------
 * addComment
